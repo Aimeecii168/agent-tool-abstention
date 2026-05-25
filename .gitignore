@@ -1,0 +1,13 @@
+# Environments
+.venv/
+env/
+.ipynb_checkpoints/
+
+# Conda/OS architecture files
+.DS_Store
+
+# Data & Models (Keep GitHub repo under 10MB)
+data/
+*.csv
+*.json
+*.pkl
