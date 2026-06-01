@@ -275,7 +275,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
     <div class="panel-desc">Click each model card to inspect it. All other hyperparameters held constant: max_depth=10, min_samples_split=5, class_weight='balanced'.</div>
     <div class="cards-grid" id="tree-cards">
       <div class="model-card" onclick="selectCard('tree',0)" id="tree-card-0">
-        <div class="card-badge badge-neutral">Fewer Trees</div>
+        <div class="card-badge badge-winner">Best F1</div>
         <div class="card-name">n_estimators = 50</div>
         <div class="card-metrics">
           <div><div class="metric-row"><span class="metric-label">F1 Score</span><span class="metric-value f1-value">88.21%</span></div><div class="metric-bar-wrap"><div class="metric-bar bar-f1" data-w="88.21"></div></div></div>
@@ -353,10 +353,10 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
             <div class="cm-col-header">Predicted: Abstain</div>
           </div>
           <div class="cm-cells">
-            <div class="cm-cell cm-tn" onclick="showCmExample('tn')"><div class="cm-cell-value">48</div><div class="cm-cell-label">True Negative ✓</div></div>
-            <div class="cm-cell cm-fp" onclick="showCmExample('fp')"><div class="cm-cell-value">17</div><div class="cm-cell-label">False Positive</div></div>
-            <div class="cm-cell cm-fn" onclick="showCmExample('fn')"><div class="cm-cell-value">34</div><div class="cm-cell-label">False Negative ⚠</div></div>
-            <div class="cm-cell cm-tp" onclick="showCmExample('tp')"><div class="cm-cell-value">186</div><div class="cm-cell-label">True Positive ✓</div></div>
+            <div class="cm-cell cm-tn" onclick="showCmExample('tn',this)"><div class="cm-cell-value">48</div><div class="cm-cell-label">True Negative ✓</div></div>
+            <div class="cm-cell cm-fp" onclick="showCmExample('fp',this)"><div class="cm-cell-value">17</div><div class="cm-cell-label">False Positive</div></div>
+            <div class="cm-cell cm-fn" onclick="showCmExample('fn',this)"><div class="cm-cell-value">34</div><div class="cm-cell-label">False Negative ⚠</div></div>
+            <div class="cm-cell cm-tp" onclick="showCmExample('tp',this)"><div class="cm-cell-value">186</div><div class="cm-cell-label">True Positive ✓</div></div>
           </div>
         </div>
       </div>
@@ -366,7 +366,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
   <!-- TAB 4: Threshold Tuning -->
   <div class="panel" id="panel-3">
     <div class="panel-title">Threshold as a deployment control</div>
-    <div class="panel-desc">The model outputs a probability of abstention for each query. Drag the slider to see how real threshold values shift the balance between false positives and false negatives — using actual model predictions, not simulated values.</div>
+    <div class="panel-desc">The model outputs a probability of abstention for each query. Drag the slider to see how real threshold values shift the balance between false positives and false negatives — using actual predictions from the deeper Random Forest (max_depth=15), not simulated values.</div>
 
     <div class="threshold-wrap">
       <div class="slider-header">
@@ -381,23 +381,23 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 
       <div class="fn-fp-bar-wrap">
         <div class="fn-fp-bar-label">
-          <span class="fn-label" id="fn-bar-label">False Negatives: 34</span>
-          <span class="fp-label" id="fp-bar-label">False Positives: 17</span>
+          <span class="fn-label" id="fn-bar-label">False Negatives: 30</span>
+          <span class="fp-label" id="fp-bar-label">False Positives: 19</span>
         </div>
         <div class="fn-fp-bar-track">
-          <div class="fn-bar" id="fn-bar" style="width:52%"><span class="fn-bar-text">FN</span></div>
-          <div class="fp-bar" id="fp-bar" style="width:26%"><span class="fp-bar-text">FP</span></div>
+          <div class="fn-bar" id="fn-bar" style="width:61.2%"><span class="fn-bar-text">FN</span></div>
+          <div class="fp-bar" id="fp-bar" style="width:38.8%"><span class="fp-bar-text">FP</span></div>
         </div>
       </div>
 
       <div class="thresh-results">
-        <div class="thresh-metric"><div class="thresh-metric-value fp-value" id="t-fp">17</div><div class="thresh-metric-label">False Positives</div></div>
-        <div class="thresh-metric"><div class="thresh-metric-value fn-value" id="t-fn">34</div><div class="thresh-metric-label">False Negatives</div></div>
-        <div class="thresh-metric"><div class="thresh-metric-value" id="t-f1" style="color:var(--success)">87.94%</div><div class="thresh-metric-label">F1 Score</div></div>
+        <div class="thresh-metric"><div class="thresh-metric-value fp-value" id="t-fp">19</div><div class="thresh-metric-label">False Positives</div></div>
+        <div class="thresh-metric"><div class="thresh-metric-value fn-value" id="t-fn">30</div><div class="thresh-metric-label">False Negatives</div></div>
+        <div class="thresh-metric"><div class="thresh-metric-value" id="t-f1" style="color:var(--success)">88.58%</div><div class="thresh-metric-label">F1 Score</div></div>
       </div>
 
       <div class="behavior-indicator" id="behavior-indicator" style="background:var(--purple-pale);color:var(--purple-dark);">
-        Balanced — default production setting (t=0.50)
+        Default — but not optimal: FN (30) still exceeds FP (19), meaning more dangerous errors than safe ones
       </div>
 
       <div class="thresh-example">
@@ -417,12 +417,12 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 
     <div class="insight-box">
       <div class="insight-label">Key Insight</div>
-      <div class="insight-text">Threshold is a deployment control, not a model parameter. The best raw F1 (90.24%) occurs at t=0.30 — but this comes with 33 false positives. Lowering the threshold reduces dangerous false negatives at the cost of more unnecessary abstentions. The right threshold depends on the cost of each error type in your specific deployment environment.</div>
+      <div class="insight-text">The best F1 (90.95%) occurs at t=0.30 using the deeper Random Forest (max_depth=15) — not at the default t=0.50. At t=0.30, false negatives drop to just 9 among the tested thresholds, making it both the highest F1 and the safest threshold. The only cost is more false positives (33 unnecessary abstentions vs 19 at default). For a safety-critical system where incorrect tool execution is irreversible, t=0.30 with the deeper model is the strongest deployment choice.</div>
     </div>
 
     <div class="recommendation-box">
       <div class="recommendation-label">Final Recommendation</div>
-      <div class="recommendation-text">Deploy the deeper Random Forest (max_depth=15) with a conservative threshold between 0.30–0.40, selected based on the acceptable cost of false negatives in production. In safety-sensitive tool environments — where incorrect tool execution can trigger irreversible actions — reducing missed abstentions should be prioritized over maximizing raw F1 alone.</div>
+      <div class="recommendation-text">Deploy the deeper Random Forest (max_depth=15) with threshold t=0.30, which achieves the best F1 among all tested configurations (90.95%) and the lowest false negatives among tested thresholds (9). In safety-sensitive tool environments — where incorrect tool execution can trigger irreversible actions — the additional false positives (33 unnecessary abstentions) are an acceptable cost for dramatically reducing dangerous missed abstentions. Threshold should be revisited if the cost of unnecessary abstentions becomes measurable in production.</div>
     </div>
   </div>
 
@@ -431,20 +431,20 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 <script>
 // Real threshold data from notebook
 const threshData = [
-  { t: 0.30, fp: 33, fn: 12, f1: 90.24 },
-  { t: 0.35, fp: 30, fn: 17, f1: 89.62 },
-  { t: 0.40, fp: 27, fn: 26, f1: 87.98 },
-  { t: 0.45, fp: 22, fn: 29, f1: 88.22 },
-  { t: 0.50, fp: 17, fn: 34, f1: 87.94 },
-  { t: 0.55, fp: 15, fn: 41, f1: 86.47 },
-  { t: 0.60, fp: 13, fn: 44, f1: 86.06 },
-  { t: 0.65, fp: 11, fn: 47, f1: 85.64 },
-  { t: 0.70, fp:  7, fn: 49, f1: 85.93 }
+  { t: 0.30, fp: 33, fn:  9, f1: 90.95 },
+  { t: 0.35, fp: 31, fn: 14, f1: 90.15 },
+  { t: 0.40, fp: 27, fn: 19, f1: 89.73 },
+  { t: 0.45, fp: 21, fn: 23, f1: 89.95 },
+  { t: 0.50, fp: 19, fn: 30, f1: 88.58 },
+  { t: 0.55, fp: 14, fn: 36, f1: 88.04 },
+  { t: 0.60, fp: 12, fn: 38, f1: 87.92 },
+  { t: 0.65, fp: 12, fn: 41, f1: 87.10 },
+  { t: 0.70, fp:  9, fn: 44, f1: 86.91 }
 ];
 
 // Build threshold table
 const tbody = document.getElementById('thresh-tbody');
-const postures = ['Very conservative','Conservative','Moderately conservative','Slightly conservative','Balanced','Slightly aggressive','Aggressive','Very aggressive','Very aggressive'];
+const postures = ['Very conservative — Best F1','Conservative','Moderately conservative','Slightly conservative','Default (not optimal)','Slightly aggressive','Aggressive','Very aggressive','Very aggressive'];
 threshData.forEach((d,i) => {
   const tr = document.createElement('tr');
   if (d.t === 0.50) tr.className = 'active-row';
@@ -481,9 +481,11 @@ function updateThreshold(idx) {
 
   // Behavior indicator
   const ind = document.getElementById('behavior-indicator');
-  if (d.t <= 0.35) { ind.style.background='var(--success-light)'; ind.style.color='var(--success)'; ind.textContent=`Conservative — fewer missed abstentions (FN=${d.fn}), more unnecessary abstentions (FP=${d.fp})`; }
-  else if (d.t >= 0.60) { ind.style.background='var(--danger-light)'; ind.style.color='var(--danger)'; ind.textContent=`Aggressive — fewer unnecessary abstentions (FP=${d.fp}), more missed abstentions (FN=${d.fn})`; }
-  else { ind.style.background='var(--purple-pale)'; ind.style.color='var(--purple-dark)'; ind.textContent=`Balanced — threshold ${d.t.toFixed(2)}, FP=${d.fp}, FN=${d.fn}`; }
+  if (d.t === 0.30) { ind.style.background='var(--success-light)'; ind.style.color='var(--success)'; ind.textContent=`Best F1 (90.95%) + lowest FN among tested thresholds (9) — safest deployment choice, at the cost of more unnecessary abstentions (FP=${d.fp})`; }
+  else if (d.t <= 0.35) { ind.style.background='var(--success-light)'; ind.style.color='var(--success)'; ind.textContent=`Conservative — fewer missed abstentions (FN=${d.fn}), more unnecessary abstentions (FP=${d.fp})`; }
+  else if (d.t === 0.50) { ind.style.background='var(--warning-light)'; ind.style.color='var(--warning)'; ind.textContent=`Default threshold — but not optimal: FN (${d.fn}) still exceeds FP (${d.fp}), meaning more dangerous errors than safe ones`; }
+  else if (d.t >= 0.60) { ind.style.background='var(--danger-light)'; ind.style.color='var(--danger)'; ind.textContent=`Aggressive — fewer unnecessary abstentions (FP=${d.fp}), but high risk of incorrect tool execution (FN=${d.fn})`; }
+  else { ind.style.background='var(--purple-pale)'; ind.style.color='var(--purple-dark)'; ind.textContent=`Threshold ${d.t.toFixed(2)} — FP=${d.fp}, FN=${d.fn}. Lower threshold recommended for safety-critical deployment`; }
 
   // Live example
   const outcome = document.getElementById('thresh-outcome');
@@ -525,7 +527,6 @@ function selectCard(group, idx) {
   const d = details[idx];
   document.querySelectorAll('#'+group+'-cards .model-card').forEach((c,i)=>c.classList.toggle('selected',i===idx));
   const dc = d.delta==='better'?'delta-better':d.delta==='worse'?'delta-worse':'delta-neutral';
-  const dt = d.delta==='better'?'Improvement':'d.delta'==='worse'?'Below baseline':'Reference baseline';
   const dtLabel = d.delta==='better'?'Improvement over baseline':d.delta==='worse'?'Below baseline':'Reference baseline';
   document.getElementById(group+'-detail').innerHTML=`<div class="selected-detail-inner"><div class="selected-detail-name">${d.name}<span class="delta-tag ${dc}">${dtLabel}</span></div><div class="selected-detail-text">${d.text}</div></div>`;
 }
@@ -563,9 +564,9 @@ const cmExamples = {
   tp:{ title:'True Positive — correct abstention', desc:'Query: "write a python script to change filenames in a folder with their date of creation." → Correctly abstained. No available tool could fulfill a code-generation request.', color:'var(--purple-mid)', bg:'var(--purple-pale)' }
 };
 
-function showCmExample(cell) {
+function showCmExample(cell, el) {
   document.querySelectorAll('.cm-cell').forEach(c=>c.classList.remove('selected-cell'));
-  event.currentTarget.classList.add('selected-cell');
+  el.classList.add('selected-cell');
   const ex = cmExamples[cell];
   document.getElementById('example-box').innerHTML=`
     <div class="example-box-label" style="color:${ex.color}">${ex.title}</div>
