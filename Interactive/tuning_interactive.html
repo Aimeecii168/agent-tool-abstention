@@ -257,7 +257,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
     <div class="selected-detail" id="depth-detail"><div style="color:var(--gray-mid);font-size:13px;">← Click a model card to see details</div></div>
     <div class="insight-box">
       <div class="insight-label">Key Insight</div>
-      <div class="insight-text">Deeper trees improved F1 and reduced false negatives (51 → 34 → 30), at the cost of slightly more false positives (6 → 17 → 19). In a safety-critical system, catching more dangerous missed abstentions is worth a few extra unnecessary abstentions.</div>
+      <div class="insight-text">Deeper trees caught more dangerous errors — false negatives dropped from 51 to 30 as depth increased. Yes, we got a few more unnecessary abstentions along the way, but in a safety-critical system that's the right tradeoff. More depth means the model looks harder before deciding to act.</div>
     </div>
     <table class="compare-table">
       <thead><tr><th>Model</th><th>F1</th><th>FP</th><th>FN</th><th>vs Baseline</th></tr></thead>
@@ -305,7 +305,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
     <div class="selected-detail" id="tree-detail"><div style="color:var(--gray-mid);font-size:13px;">← Click a model card to see details</div></div>
     <div class="insight-box">
       <div class="insight-label">Key Insight</div>
-      <div class="insight-text">Tree count had limited impact — 50–100 trees appeared sufficient. With n=50, the model slightly outperformed baseline at 88.21% F1. Increasing to n=200 did not improve performance, showing clear diminishing returns well before 200 trees.</div>
+      <div class="insight-text">Adding more trees didn't help much — 50 trees performed just as well as 200. This tells us the model learned what it needed to early. More isn't always better — beyond a certain point you're just adding complexity without gaining accuracy.</div>
     </div>
     <table class="compare-table">
       <thead><tr><th>Model</th><th>F1</th><th>FP</th><th>FN</th><th>vs Baseline</th></tr></thead>
@@ -338,7 +338,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
     <div class="example-box" id="example-box"><div style="color:var(--gray-mid);font-size:13px;">← Click an error type above to see a real example from the test set</div></div>
     <div class="insight-box">
       <div class="insight-label">Key Insight</div>
-      <div class="insight-text">The model made twice as many false negatives (34) as false positives (17) — meaning it is more likely to incorrectly execute a tool than to incorrectly abstain. In safety-critical deployment, a missed abstention can trigger a booking, a deletion, or an irreversible API call. Reducing FN is the priority.</div>
+      <div class="insight-text">Our baseline made twice as many dangerous errors as safe ones — 34 cases where the agent acted when it shouldn't have, versus 17 unnecessary abstentions. Think of that email sent when it shouldn't have been. That's why reducing false negatives is our priority — and why we tuned the model further.</div>
     </div>
     <div class="cm-wrap">
       <div class="cm-section-label">Baseline confusion matrix — click any cell to explore</div>
@@ -366,7 +366,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
   <!-- TAB 4: Threshold Tuning -->
   <div class="panel" id="panel-3">
     <div class="panel-title">Threshold as a deployment control</div>
-    <div class="panel-desc">The model outputs a probability of abstention for each query. Drag the slider to see how real threshold values shift the balance between false positives and false negatives — using actual predictions from the deeper Random Forest (max_depth=15), not simulated values.</div>
+    <div class="panel-desc">Think of the slider as a confidence dial. At 50%, the model only abstains when it's at least 50% confident it should. Drag it left to make the model more cautious — it abstains more often, catching more dangerous errors. Drag it right to make it more aggressive — it acts more often, but risks more irreversible mistakes. All results use actual predictions from our model — not simulated values.</div>
 
     <div class="threshold-wrap">
       <div class="slider-header">
@@ -402,7 +402,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 
       <div class="thresh-example">
         <div class="thresh-example-label">Live example — borderline query (prob_abstain = 0.48)</div>
-        <div class="thresh-example-query">"Give the details of recommendations for the advisory id EOL3030_3030"</div>
+        <div class="thresh-example-query">"Let's put a pin on that"</div>
+        <div style="font-size:13px; color:var(--text-mid); margin-bottom:10px; line-height:1.5;">This query should abstain — figurative language that nearly triggered a location tool. At t=0.50 the model misses it. Drag the slider left to see it caught correctly.</div>
         <div class="thresh-example-outcome" id="thresh-outcome" style="background:var(--danger-light);color:var(--danger);">→ Predicted: Tool-use ⚠ — prob_abstain 0.48 is below threshold 0.50</div>
       </div>
 
@@ -417,7 +418,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px;
 
     <div class="insight-box">
       <div class="insight-label">Key Insight</div>
-      <div class="insight-text">The best F1 (90.95%) occurs at t=0.30 using the deeper Random Forest (max_depth=15) — not at the default t=0.50. At t=0.30, false negatives drop to just 9 among the tested thresholds, making it both the highest F1 and the safest threshold. The only cost is more false positives (33 unnecessary abstentions vs 19 at default). For a safety-critical system where incorrect tool execution is irreversible, t=0.30 with the deeper model is the strongest deployment choice.</div>
+      <div class="insight-text">At the default threshold of 0.50, we still have 30 dangerous errors. But at t=0.30, that drops to just 9. Yes, we get more unnecessary abstentions — but remember, that's the safe error. That's the tradeoff we want in a safety-critical system. t=0.30 with the deeper model is our recommendation.</div>
     </div>
 
     <div class="recommendation-box">
@@ -533,8 +534,8 @@ function selectCard(group, idx) {
 
 // Error examples
 const fnExamples = [
-  { query:'"use calculator to cope with problems"', true_label:'Abstain', pred:'Tool-use', tool:'compute_statistics', why:'The word "calculator" triggered a match with compute_statistics — but the query is clearly metaphorical, not a literal computation request.' },
-  { query:'"Give the details of recommendations for the advisory id EOL3030_3030"', true_label:'Abstain', pred:'Tool-use', tool:'requests.get', why:'The advisory ID looks like structured data the model expected a tool could handle — but no suitable tool was available for this specific lookup.' }
+  { query:'"let\'s put a pin on that"', true_label:'Abstain', pred:'Tool-use', tool:'Messaging_1_ShareLocation', why:'The word "pin" triggered a match with a location sharing tool — but the query is clearly figurative, meaning "let\'s revisit this later." String matching can\'t catch figurative language.' },
+  { query:'"Let\'s put a pin on that"', true_label:'Abstain', pred:'Tool-use', tool:'Messaging_1_ShareLocation', why:'The word "pin" triggered a match with a location sharing tool — but the query is clearly figurative, meaning "let\'s revisit this later." At t=0.50 the model misses it, but lowering the threshold to t=0.30 correctly catches it as abstain.' }
 ];
 const fpExamples = [
   { query:'"How have millennials\' views of Apple changed since July 2022?"', true_label:'Tool-use', pred:'Abstain', tool:'extract_parameters_v1', why:'The query reads like a general knowledge question, so the model abstained — but a data extraction tool was available and appropriate.' },
@@ -560,7 +561,7 @@ function showExample(type) {
 const cmExamples = {
   tn:{ title:'True Negative — correct tool-use prediction', desc:'Query: "I need a Comfort Uber ride from 2020 Addison Street, Berkeley, CA." → Correctly predicted tool-use. The specific address and service type clearly matched the ride-booking tool.', color:'var(--success)', bg:'var(--success-light)' },
   fp:{ title:'False Positive — unnecessary abstention', desc:'Query: "How have millennials\' views of Apple changed since July 2022?" → Model abstained, but a data extraction tool was available. Question-like phrasing confused the model.', color:'var(--warning)', bg:'var(--warning-light)' },
-  fn:{ title:'False Negative ⚠ — dangerous missed abstention', desc:'Query: "use calculator to cope with problems" → Predicted tool-use but should have abstained. Metaphorical language matched tool keywords — a safety-critical miss.', color:'var(--danger)', bg:'var(--danger-light)' },
+  fn:{ title:'False Negative ⚠ — dangerous missed abstention', desc:'Query: "let\'s put a pin on that" → Predicted tool-use but should have abstained. Figurative language matched a location tool keyword — a safety-critical miss.', color:'var(--danger)', bg:'var(--danger-light)' },
   tp:{ title:'True Positive — correct abstention', desc:'Query: "write a python script to change filenames in a folder with their date of creation." → Correctly abstained. No available tool could fulfill a code-generation request.', color:'var(--purple-mid)', bg:'var(--purple-pale)' }
 };
 
